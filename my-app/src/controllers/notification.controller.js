@@ -1,6 +1,7 @@
 import Notification from '../models/notification.js'
 import { formatTransactionMessage } from '../config/utils/notificationFormatter.js';
 import { getIO } from '../services/socket.service.js';
+import { successResponse } from '../utils/responseFormatter.js';
 
 
 export const sendNotification = async (userId, notification) => {
@@ -33,20 +34,23 @@ export const notifyTransaction = async (transaction, type) => {
   }
 };
 
-
 export const getUserNotifications = async (req, res, next) => {
   try {
-    const notifications = await Notification.find({ 
-      recipient: req.user._id 
+   const notifications = await Notification.find({ 
+      $or: [
+        { recipient: req.user._id },
+        { user: req.user._id }  
+      ]
     })
-    .sort({ createdAt: -1 }) 
-    .limit(50)
 
-    return res.status(200).json({
-      notifications
+    return successResponse(res, {
+      message: 'Notifications retrieved successfully',
+      data: { notifications },
+      statusCode: 200
     });
   } catch (error) {
-    return next(error)
+    console.error('Error fetching notifications:', error);
+    return next(error);
   }
-}
+};
 
